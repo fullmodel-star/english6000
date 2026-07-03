@@ -1,0 +1,37 @@
+{
+ "name": "高中英語 6000 單字",
+ "short_name": "高中6000",
+ "description": "大考中心 6 級參考詞彙表・間隔複習＋單元闖關，背熟高中英語 6000 單字",
+ "lang": "zh-Hant",
+ "start_url": ".",
+ "scope": ".",
+ "display": "standalone",
+ "background_color": "#f5f6f8",
+ "theme_color": "#f5a623",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "icon.svg",
+   "sizes": "any",
+   "type": "image/svg+xml",
+   "purpose": "any"
+  }
+ ]
+}
