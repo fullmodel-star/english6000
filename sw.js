@@ -1,5 +1,5 @@
 // 英語番茄鐘 · 單字卡 — Service Worker（離線快取）
-const CACHE = "senior6000-v6";
+const CACHE = "senior6000-v7";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
