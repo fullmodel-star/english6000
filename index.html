@@ -1135,9 +1135,9 @@ function beep(){
 
 /* ---------- quiz ---------- */
 let quiz = { kind:null, items:[], i:0, score:0, answered:false };
-function saveQuiz(){ try{ if(quiz && quiz.kind && quiz.items && quiz.i<quiz.items.length) localStorage.setItem("engpomo_quiz", JSON.stringify(quiz)); else localStorage.removeItem("engpomo_quiz"); }catch(e){} }
-function clearQuizSave(){ try{ localStorage.removeItem("engpomo_quiz"); }catch(e){} }
-function restoreQuizSave(){ try{ const r=localStorage.getItem("engpomo_quiz"); if(r){ const q=JSON.parse(r); if(q && q.items && q.items.length && q.i<q.items.length){ quiz=q; return true; } } }catch(e){} return false; }
+function saveQuiz(){ try{ if(quiz && quiz.kind && quiz.items && quiz.i<quiz.items.length) localStorage.setItem("engpomo_quiz_6000", JSON.stringify(quiz)); else localStorage.removeItem("engpomo_quiz_6000"); }catch(e){} }
+function clearQuizSave(){ try{ localStorage.removeItem("engpomo_quiz_6000"); }catch(e){} }
+function restoreQuizSave(){ try{ const r=localStorage.getItem("engpomo_quiz_6000"); if(r){ const q=JSON.parse(r); if(q && q.items && q.items.length && q.i<q.items.length){ quiz=q; return true; } } }catch(e){} return false; }
 function switchQuiz(kind){
   quiz={ kind:"vocab", items:[], i:0, score:0, answered:false, wrongItems:[] };
   syncQuizCtrl();
