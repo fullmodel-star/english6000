@@ -1296,7 +1296,7 @@ function answerOne(oi){
   const q=quiz.items[quiz.i];
   markOpts(document.getElementById("optList"), oi, q.answer);
   if(oi===q.answer){ quiz.score++; if(q.word && quiz.wrongMode) markCorrect(q.word, q.dir); quizJuice(true); }
-  else { quiz.wrongItems.push(q); if(q.word){ addWrong(q.word, q.options[oi], q.dir); try{window.EngReview&&EngReview.addWrong({cat:'單字',stem:q.question,options:q.options,your:oi,ans:q.answer,expl:'正解：'+q.word+(q.explanation?'　'+q.explanation:'')});}catch(e){} } quizJuice(false); }
+  else { quiz.wrongItems.push(q); if(q.word){ addWrong(q.word, q.options[oi], q.dir); try{if(window.EngReview){var _wc=(typeof WORDS!=='undefined')?WORDS.find(function(x){return x.word===q.word;}):null;EngReview.addWrong({cat:(_wc&&_wc.level)?('第'+_wc.level+'級單字'):'單字',stem:q.question,options:q.options,your:oi,ans:q.answer,expl:'正解：'+q.word+(q.explanation?'　'+q.explanation:'')});}}catch(e){} } quizJuice(false); }
   save(); saveQuiz();
   const sc=document.getElementById("qScore"); if(sc) sc.textContent="得分 "+quiz.score;
   const ex=document.getElementById("exp"); ex.classList.remove("hide");
