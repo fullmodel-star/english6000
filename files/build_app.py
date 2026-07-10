@@ -5,7 +5,7 @@ Safe to re-run."""
 import json, re, pathlib, sys
 
 BUILD = pathlib.Path(__file__).parent
-TEMPLATE = pathlib.Path(r"C:/Users/c0787/Desktop/英語單字APP/國中2000/index.html")
+TEMPLATE = pathlib.Path(r"C:/Users/c0787/Desktop/英語單字APP/02_國中2000/index.html")  # 資料夾已重編號
 OUTDIR = BUILD.parent
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
@@ -292,4 +292,17 @@ h = h.replace('function updateDeckPreview(){ document.getElementById("deckPrevie
 OUT = OUTDIR/'index.html'
 OUT.write_text(h, encoding='utf-8')
 print(f"wrote {OUT}  ({len(h):,} bytes)  units={NUNITS}  levels={dict(sorted(LC.items()))}")
+
+# ---- build 後必須重跑注入器 ----
+# 1) 模板是 02_國中2000/index.html，會夾帶「2000 的家長後台 App 代號」→ 必須 --reinject 蓋成本 App 的代號
+# 2) K28 四大功能(鎖導覽/固定50題/綜合測驗/錯題分類)雖隨模板帶入，仍跑一次確保完整
+import subprocess as _sp, sys as _sys
+_ROOT = OUTDIR.parent   # 英語單字APP/
+for _script, _args in ((_ROOT/'_k28_inject.py', []), (_ROOT/'_parentsync_inject.py', ['--reinject'])):
+    if _script.exists():
+        _r = _sp.run([_sys.executable, str(_script)] + _args, cwd=str(_ROOT))
+        print(f"  re-inject {_script.name}: exit {_r.returncode}")
+    else:
+        print(f"  ⚠️ 找不到 {_script.name} → index.html 會缺少四大功能/家長後台回報！")
+
 PY_END = True
