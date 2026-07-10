@@ -2400,10 +2400,11 @@ window.__ENG_SUMMARY=function(){
   var wc=Object.keys(S.wrong||{}).filter(function(k){return S.wrong[k]&&S.wrong[k].graduated}).length;
   var st=S.stats||{}, xp=st.xp||0;
   var lv=(typeof xpLevel==='function')?xpLevel(xp):null;
-  return {pct: total?Math.round(mastered/total*100):null, pctLabel:'精熟',
+  var learned=Object.keys(S.srs||{}).length;   // 碰過(有 SRS 記錄)= 已學過
+  return {pct: total?Math.round(learned/total*100):null, pctLabel:'已學過',
     streak: st.streak||0,
-    metrics:[{k:'精熟字',v:mastered+'/'+total},{k:'單元過關',v:units},{k:'綜合過關',v:combos},
-             {k:'待清錯題',v:wa},{k:'已征服',v:wc},{k:'等級',v:lv?('Lv '+lv):'—'}]};
+    metrics:[{k:'已學過',v:learned+'/'+total},{k:'精熟',v:mastered},{k:'單元過關',v:units},
+             {k:'綜合過關',v:combos},{k:'待清錯題',v:wa},{k:'等級',v:lv?('Lv '+lv):'—'}]};
 };
 (function(){
   var APP=window.__ENG_APP||'app', LABEL=window.__ENG_LABEL||document.title;
@@ -2464,6 +2465,7 @@ window.__ENG_SUMMARY=function(){
   }, 900);
 })();
 </script>
+
 
 
 
