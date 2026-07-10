@@ -2387,45 +2387,49 @@ else{if(document.readyState==='loading')document.addEventListener('DOMContentLoa
   else window.addEventListener('load',function(){setTimeout(mount,300);});
 })();
 </script>
-<!--RIDGELINE_BRAND_END-->
 
-<script>/*ENG_SYNC_MODULE*/
+<script>/*ENG_SYNC_MODULE_V2*/
 window.__ENG_APP="vocab6000";window.__ENG_LABEL="高中6000單字";
+window.__ENG_SUMMARY=function(){
+  var S=window.S||{};
+  var total=(typeof WORDS!=='undefined'&&WORDS)?WORDS.length:0;
+  var mastered=(typeof masteredCount==='function')?masteredCount():0;
+  var units=Object.keys(S.units||{}).filter(function(u){return S.units[u]&&S.units[u].passed}).length;
+  var combos=Object.keys(S.combos||{}).filter(function(b){return S.combos[b]&&S.combos[b].passed}).length;
+  var wa=(typeof wrongCount==='function')?wrongCount():0;
+  var wc=Object.keys(S.wrong||{}).filter(function(k){return S.wrong[k]&&S.wrong[k].graduated}).length;
+  var st=S.stats||{}, xp=st.xp||0;
+  var lv=(typeof xpLevel==='function')?xpLevel(xp):null;
+  return {pct: total?Math.round(mastered/total*100):null, pctLabel:'精熟',
+    streak: st.streak||0,
+    metrics:[{k:'精熟字',v:mastered+'/'+total},{k:'單元過關',v:units},{k:'綜合過關',v:combos},
+             {k:'待清錯題',v:wa},{k:'已征服',v:wc},{k:'等級',v:lv?('Lv '+lv):'—'}]};
+};
 (function(){
   var APP=window.__ENG_APP||'app', LABEL=window.__ENG_LABEL||document.title;
   var K={url:'eng_sync_url',key:'eng_sync_key',child:'eng_child'};
-  function LS(k){ try{return localStorage.getItem(k)||''}catch(e){return ''} }
-  function cfg(){ return {url:LS(K.url), key:LS(K.key), child:LS(K.child)}; }
-  // 一次性設定：#sync=url~key~child
+  function G(k){ try{return localStorage.getItem(k)||''}catch(e){return ''} }
+  function cfg(){ return {url:G(K.url), key:G(K.key), child:G(K.child)}; }
+  function ready(){ var c=cfg(); return !!(c.url&&c.child); }
   try{
     var m=(location.hash||'').match(/sync=(.+)$/);
     if(m){
       var p=m[1].split('~').map(function(s){try{return decodeURIComponent(s)}catch(e){return s}});
-      if(p[0]) localStorage.setItem(K.url, p[0].replace(/\/+$/,''));
-      if(p[1]) localStorage.setItem(K.key, p[1]);
-      if(p[2]) localStorage.setItem(K.child, p[2]);
+      if(p[0]) localStorage.setItem(K.url,p[0].replace(/\/+$/,''));
+      if(p[1]) localStorage.setItem(K.key,p[1]);
+      if(p[2]) localStorage.setItem(K.child,p[2]);
       try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
-      setTimeout(function(){ alert('✅ 家長後台已設定：這台是「'+(p[2]||'')+'」的裝置，之後所有單字 App 都會自動回報進度。'); },300);
+      setTimeout(function(){ alert('✅ 家長後台已設定：這台是「'+(p[2]||'')+'」的裝置，之後所有英語 App 都會自動回報進度。'); },300);
     }
   }catch(e){}
-  function num(v){ v=Number(v); return isFinite(v)?v:0; }
-  function summary(){
-    try{
-      var S=window.S||{};
-      var mastered=(typeof masteredCount==='function')?masteredCount():0;
-      var total=(typeof WORDS!=='undefined'&&WORDS)?WORDS.length:0;
-      var units=Object.keys(S.units||{}).filter(function(u){var x=S.units[u];return x&&x.passed}).length;
-      var combos=Object.keys(S.combos||{}).filter(function(b){var x=S.combos[b];return x&&x.passed}).length;
-      var wrongA=(typeof wrongCount==='function')?wrongCount():Object.keys(S.wrong||{}).filter(function(k){return S.wrong[k]&&!S.wrong[k].graduated}).length;
-      var wrongC=Object.keys(S.wrong||{}).filter(function(k){return S.wrong[k]&&S.wrong[k].graduated}).length;
-      var st=S.stats||{}, xp=st.xp||0, lv=(typeof xpLevel==='function')?xpLevel(xp):1;
-      return {mastered:num(mastered),total:num(total),unitsPassed:num(units),combosPassed:num(combos),wrongActive:num(wrongA),wrongConquered:num(wrongC),streak:num(st.streak),xp:num(xp),level:num(lv)};
-    }catch(e){ return {}; }
-  }
+  function report(){ try{ return window.__ENG_SUMMARY()||{}; }catch(e){ return {}; } }
   var t=null;
   function push(beacon){
     var c=cfg(); if(!c.url||!c.child) return;
-    var body=JSON.stringify({child:c.child, app:APP, label:LABEL, summary:summary(), ts:Date.now(), key:c.key});
+    var r=report();
+    var body=JSON.stringify({child:c.child, app:APP, label:LABEL, key:c.key, ts:Date.now(),
+      pct:(r.pct===undefined?null:r.pct), pctLabel:r.pctLabel||'進度',
+      streak:(r.streak===undefined?null:r.streak), metrics:r.metrics||[]});
     var url=c.url+'/report';
     try{
       if(beacon && navigator.sendBeacon){ navigator.sendBeacon(url, new Blob([body],{type:'text/plain'})); return; }
@@ -2433,26 +2437,37 @@ window.__ENG_APP="vocab6000";window.__ENG_LABEL="高中6000單字";
         .then(function(){setDot(true)}).catch(function(){setDot(false)});
     }catch(e){}
   }
-  function schedule(){ var c=cfg(); if(!c.url||!c.child) return; if(t) clearTimeout(t); t=setTimeout(function(){push(false)}, 6000); }
-  if(typeof window.save==='function'){ var _os=window.save; window.save=function(){ var r=_os.apply(this,arguments); schedule(); return r; }; try{save=window.save}catch(e){} }
-  window.addEventListener('pagehide',function(){ push(true); });
-  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') push(true); });
+  function schedule(){ if(!ready()) return; if(t) clearTimeout(t); t=setTimeout(function(){push(false)},6000); }
+  try{
+    var _si=Storage.prototype.setItem;
+    Storage.prototype.setItem=function(k,v){
+      var r=_si.apply(this,arguments);
+      try{ var s=String(k); if(s!=='eng_sync_url'&&s!=='eng_sync_key'&&s!=='eng_child') schedule(); }catch(e){}
+      return r;
+    };
+  }catch(e){}
+  window.addEventListener('pagehide',function(){ if(ready()) push(true); });
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden'&&ready()) push(true); });
   function setDot(ok){ var d=document.getElementById('engSyncDot'); if(d) d.style.background=ok?'#2eb872':'#e8504f'; }
   window.engSyncNow=function(){ push(false); };
-  window.engSync={push:push,cfg:cfg,summary:summary};
+  window.engSync={push:push,cfg:cfg,report:report};
   setTimeout(function(){
-    var c=cfg(); if(!(c.url&&c.child)) return;
+    if(!ready()) return;
     if(document.getElementById('engSyncBadge')) return;
+    var c=cfg();
     var b=document.createElement('div'); b.id='engSyncBadge';
     b.style.cssText='position:fixed;left:8px;bottom:calc(var(--nav-h,60px) + env(safe-area-inset-bottom) + 8px);z-index:60;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:3px 9px;border-radius:999px;display:flex;align-items:center;gap:5px;cursor:pointer';
     b.innerHTML='<span id="engSyncDot" style="width:8px;height:8px;border-radius:50%;background:#2eb872;display:inline-block"></span>☁️ '+c.child;
-    b.title='點我立即同步';
-    b.onclick=function(){ engSyncNow(); };
+    b.title='點我立即同步'; b.onclick=function(){ engSyncNow(); };
     document.body.appendChild(b);
     push(false);
   }, 900);
 })();
 </script>
+
+
+<!--RIDGELINE_BRAND_END-->
+
 
 </body>
 </html>
