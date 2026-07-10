@@ -174,6 +174,11 @@ button{font-family:inherit; cursor:pointer; border:none; background:none; color:
 .nav button{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--muted); font-size:12px; font-weight:700}
 .nav button .ni{font-size:22px; line-height:1}
 .nav button.on{color:var(--accent)}
+body.quiz-lock .nav{display:none}
+body.quiz-lock .quiz-ctrl{display:none}
+.wb-cat-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--accent-d);margin:14px 2px 8px;padding-bottom:5px;border-bottom:2px solid var(--accent-soft)}
+.wb-cat-h:first-child{margin-top:2px}
+.wb-cat-h span{font-size:11px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;padding:1px 8px}
 
 /* modal */
 .overlay{position:fixed; inset:0; background:rgba(20,25,35,.55); display:flex; align-items:flex-end; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity .25s}
@@ -499,7 +504,7 @@ button{font-family:inherit; cursor:pointer; border:none; background:none; color:
 
   <!-- ===== QUIZ ===== -->
   <section class="view" id="view-quiz">
-    <div class="topbar"><div class="title">單字測驗</div><div></div></div>
+    <div class="topbar"><div class="title">單字測驗</div><button class="icon-btn" id="quizExit" style="display:none" onclick="exitQuiz()">✕</button></div>
     <div class="quiz-ctrl">
       <div class="qc-row">
         <span class="qc-lab">題型</span>
@@ -511,14 +516,9 @@ button{font-family:inherit; cursor:pointer; border:none; background:none; color:
         </div>
       </div>
       <div class="qc-row">
-        <span class="qc-lab">題數</span>
-        <div class="qc-seg" id="qcCount">
-          <button data-c="10" onclick="setQuizCount(10)">10</button>
-          <button data-c="20" onclick="setQuizCount(20)">20</button>
-          <button data-c="50" onclick="setQuizCount(50)">50</button>
-        </div>
-        <span class="qc-lab" style="width:auto;margin-left:auto">單元</span>
-        <select id="qcUnit" class="qc-unit" onchange="setQuizUnit(this.value)"></select>
+        <span class="qc-lab">範圍</span>
+        <select id="qcUnit" class="qc-unit" style="max-width:none;flex:1" onchange="setQuizUnit(this.value)"></select>
+        <span class="qc-lab" style="width:auto;margin-left:auto;color:var(--muted);font-weight:700">📝 固定 50 題</span>
       </div>
     </div>
     <div id="quizBody"></div>
@@ -578,6 +578,14 @@ button{font-family:inherit; cursor:pointer; border:none; background:none; color:
           <button id="wbSortT" onclick="setWbSort('t')">最近錯</button>
         </div>
       </div>
+      <div class="qc-row" style="margin-bottom:8px"><span class="qc-lab">分類</span>
+        <div class="qc-seg grow" id="wbGroupSeg">
+          <button data-g="topic" class="on" onclick="setWbGroup('topic')">主題</button>
+          <button data-g="pos" onclick="setWbGroup('pos')">詞性</button>
+          <button data-g="unit" onclick="setWbGroup('unit')">單元</button>
+          <button data-g="level" onclick="setWbGroup('level')">級別</button>
+        </div>
+      </div>
       <div id="wbList"></div>
     </div>
   </section>
@@ -594,6 +602,11 @@ button{font-family:inherit; cursor:pointer; border:none; background:none; color:
       </div>
     </div>
     <div class="units-grid" id="unitsGrid"></div>
+    <div class="panel" style="margin-top:16px">
+      <h3 style="margin-bottom:4px">🏆 綜合測驗</h3>
+      <div class="muted" style="font-size:12px;margin-bottom:10px">每過完 4 個單元解鎖一關，用「拼字」考 100 題，答對率 ≥80% 過關 🏆</div>
+      <div class="units-grid" id="comboGrid"></div>
+    </div>
   </section>
 
   <!-- ===== UNIT DETAIL ===== -->
@@ -643,6 +656,7 @@ button{font-family:inherit; cursor:pointer; border:none; background:none; color:
     <button id="nav-cards" aria-label="單字卡" onclick="go('cards')"><span class="ni">🃏</span>單字卡</button>
     <button id="nav-units" aria-label="單元" onclick="go('units')"><span class="ni">📚</span>單元</button>
     <button id="nav-quiz" aria-label="測驗" onclick="go('quiz')"><span class="ni">📝</span>測驗</button>
+    <button id="nav-wrong" aria-label="錯題" onclick="go('wrong')"><span class="ni">🔁</span>錯題</button>
     <button id="nav-exam" aria-label="學測考古" onclick="go(\'exam\')"><span class="ni">🎯</span>考古</button>
     <button id="nav-stats" aria-label="統計" onclick="go('stats')"><span class="ni">📊</span>統計</button>
   </nav>
@@ -777,6 +791,8 @@ const DEFAULT = {
 };
 let S = load();
 if(!S.wrong) S.wrong={};
+if(!S.combos) S.combos={};
+S.settings.quizCount=50; // K28: 一律最完整 50 題
 if(!S.units) S.units={};
 if(!S.profile) S.profile={cls:"",seat:"",name:""};
 if(Object.keys(S.wrong).length===0){ for(const k in S.srs){ const e=S.srs[k]; if(e && e.wrong>0 && (e.box||1)<5) S.wrong[k]={n:e.wrong, ts:e.due||0}; } }
@@ -893,6 +909,10 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.random()*(i+1)|
 
 /* ---------- view nav ---------- */
 function go(v){
+  if(quizInProgress() && v!=="quiz"){
+    if(!confirm("測驗還沒做完，離開會放棄這次成績，確定離開？")) return;
+    clearQuizSave(); quiz={}; setQuizLock(false);
+  }
   document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
   document.getElementById("view-"+v).classList.add("active");
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("on"));
@@ -1147,7 +1167,7 @@ function switchQuiz(kind){
   syncQuizCtrl();
   const u=S.settings.quizUnit;
   const pool=(u && u!=="all") ? WORDS.filter(w=>w.unit===+u) : null;
-  quiz.items=genVocabQuiz(S.settings.quizCount||10, pool, S.settings.quizDir||"en2zh");
+  quiz.items=genVocabQuiz(50, pool, S.settings.quizDir||"en2zh");
   renderQuiz();
 }
 function syncQuizCtrl(){
@@ -1232,7 +1252,8 @@ function genVocabQuiz(n, pool, dir){
 function renderQuiz(){
   const b=document.getElementById("quizBody");
   if(quiz.items.length===0){ b.innerHTML=`<div class="empty"><div class="e">📭</div>這個牌組沒有足夠題目</div>`; return; }
-  if(quiz.i>=quiz.items.length){ renderQuizResult(); return; }
+  if(quiz.i>=quiz.items.length){ setQuizLock(false); renderQuizResult(); return; }
+  setQuizLock(true);
   const q=quiz.items[quiz.i];
   let html=`<div class="q-meta"><span>字彙 ${quiz.i+1} / ${quiz.items.length}${quiz.combo>=2?' 🔥'+quiz.combo+'連勝':''}</span><span id="qScore">得分 ${quiz.score}</span></div>`;
   html+=`<div class="panel"><div class="q-text">${q.question}</div>`;
@@ -1322,7 +1343,15 @@ function renderQuizResult(){
   const nWrong = quiz.wrongItems.length;
   const redoBtn = nWrong>0 ? `<button class="btn" style="margin-top:18px;background:var(--amber);box-shadow:0 6px 16px rgba(245,166,35,.35)" onclick="redoWrong()">🔁 只重做錯題（${nWrong}）</button>` : "";
   let unitMsg="", unitBtns="";
-  if(quiz.unitChallenge){
+  if(quiz.comboTest){
+    const b=quiz.comboTest, prev=comboState(b), best=Math.max(prev.best||0,pct);
+    const newlyPassed = pct>=80 && !prev.passed;
+    S.combos=S.combos||{}; S.combos[b]={ passed: prev.passed||pct>=80, best }; save();
+    if(newlyPassed){ celebrate("🏆","綜合測驗 "+b+" 過關！","太強了，繼續加油"); addXp(100); }
+    unitMsg = pct>=80 ? '<div style="color:var(--green);font-weight:800;margin-top:8px">🏆 綜合 '+b+' 過關！</div>'
+                       : '<div class="muted" style="margin-top:8px">差一點，答對率要 ≥80% 才過關</div>';
+    unitBtns = '<button class="btn blue" style="margin-top:16px" onclick="startComboTest('+b+')">再挑戰綜合 '+b+' 🔁</button><button class="btn sec sm" style="margin-top:10px" onclick="go(\'units\')">回單元 📚</button>';
+  } else if(quiz.unitChallenge){
     const nu=quiz.unitChallenge, prev=S.units[nu]||{}, best=Math.max(prev.best||0,pct);
     const newlyPassed = pct>=80 && !prev.passed;
     S.units[nu]={ passed: prev.passed||pct>=80, best }; save();
@@ -1383,6 +1412,42 @@ function renderTaskCard(){
   if(allDone){ const r=todayRec(); if(!r.celebrated){ r.celebrated=true; save(); celebrate("🎉","今日任務完成！","連續 "+S.stats.streak+" 天，太棒了"); } }
 }
 let wbSort='n';
+/* ===== K28 新增：綜合測驗 / 錯題分類 / 測驗鎖（小朋友實測建議） ===== */
+let wbGroup='topic';
+function setWbGroup(g){ wbGroup=g; document.querySelectorAll("#wbGroupSeg button").forEach(b=>b.classList.toggle("on",b.dataset.g===g)); renderWrongBook(); }
+function wbCatOf(w){
+  if(wbGroup==="pos") return (typeof pz==='function'?pz(w.pos):((typeof POS_ZH!=='undefined'&&POS_ZH[w.pos])||w.pos))||"其他";
+  if(wbGroup==="unit") return "Unit "+(w.unit||"?");
+  if(wbGroup==="level") return "第 "+(w.level||1)+" 級";
+  return (typeof TOPIC_ZH!=='undefined'&&TOPIC_ZH[w.topic])||w.topic||"其他";
+}
+function comboBlocks(){ return Math.ceil(unitMax()/4); }
+function comboUnits(b){ const s=(b-1)*4+1, arr=[]; for(let u=s;u<s+4 && u<=unitMax();u++) arr.push(u); return arr; }
+function comboUnlocked(b){ const us=comboUnits(b); return us.length>0 && us.every(u=>unitPassed(u)); }
+function comboState(b){ return (S.combos&&S.combos[b])||{}; }
+function renderCombos(){
+  const g=document.getElementById("comboGrid"); if(!g) return;
+  let h="";
+  for(let b=1;b<=comboBlocks();b++){
+    const us=comboUnits(b), open=comboUnlocked(b), st=comboState(b);
+    const cls=st.passed?"passed":(open?"open":"locked");
+    const tag=st.passed?"🏆":(open?"":"🔒");
+    const range="Unit "+us[0]+"–"+us[us.length-1];
+    const sub= open ? (st.best?("拼字100・最佳 "+st.best+"%"):"拼字 100 題") : "先過完這 4 關";
+    h+='<div class="unit-card '+cls+'" '+(open?'onclick="startComboTest('+b+')"':'')+'><div class="uc-top"><span class="uc-n">綜合 '+b+'</span><span>'+tag+'</span></div><div class="uc-sub">'+range+'</div><div class="uc-sub" style="font-size:11px;opacity:.85">'+sub+'</div></div>';
+  }
+  g.innerHTML=h;
+}
+function startComboTest(b){
+  if(!comboUnlocked(b)){ toast("先通過這 4 個單元 🔒"); return; }
+  const us=comboUnits(b), pool=WORDS.filter(w=>us.includes(w.unit));
+  quiz={ kind:"vocab", comboTest:b, items:genVocabQuiz(100, pool, "spell"), i:0, score:0, answered:false, wrongItems:[] };
+  go("quiz"); renderQuiz();
+}
+function quizInProgress(){ return !!(quiz && quiz.kind && quiz.items && quiz.items.length && quiz.i < quiz.items.length); }
+function setQuizLock(on){ document.body.classList.toggle("quiz-lock", !!on); const x=document.getElementById("quizExit"); if(x) x.style.display=on?"":"none"; }
+function exitQuiz(){ if(quizInProgress() && !confirm("結束測驗？這次成績不算喔。")) return; clearQuizSave(); quiz={}; setQuizLock(false); go("home"); }
+
 function speakText(t){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; u.rate=0.9; if(S.settings.sound!==false) speechSynthesis.speak(u); }catch(e){} }
 function setWbSort(s){ wbSort=s; document.getElementById("wbSortN").classList.toggle("on",s==='n'); document.getElementById("wbSortT").classList.toggle("on",s==='t'); renderWrongBook(); }
 function reasonTag(r){
@@ -1401,7 +1466,7 @@ function renderWrongBook(){
   const list=document.getElementById("wbList");
   if(items.length===0){ list.innerHTML=`<div class="empty"><div class="e">🎉</div>沒有錯題，太強了！${archived?`<div class="muted" style="font-size:12px;margin-top:8px">已征服 ${archived} 個字 🏆</div>`:""}</div>`; return; }
   const now=Date.now();
-  list.innerHTML=items.map(it=>{
+  const itemHTML=it=>{
     const w=it.w, m=normWrong(it.m);
     const boss=(m.n||0)>=5;
     const wEn=m.dirs.en2zh.w, wZh=m.dirs.zh2en.w;
@@ -1409,7 +1474,14 @@ function renderWrongBook(){
     const due=(m.due||0)<=now ? '<span class="wb-tag" style="color:var(--green);background:var(--green-soft)">待複習</span>':'';
     const picked=m.lastPicked?`<div class="z" style="color:var(--accent-d)">上次選成「${escapeHTML(m.lastPicked)}」</div>`:'';
     return `<div class="wb-item ${boss?'boss':''}"><div><div class="w">${boss?'👹 ':''}${w.word} <span class="wb-u">U${w.unit}</span>${reasonTag(m.reason)}${due}</div><div class="z">${pz(w.pos)}・${w.zh_tw}${prog?'　<span style="color:var(--green)">'+prog+'</span>':''}</div>${picked}</div><span class="cnt">錯${m.n||1}次</span><div class="sp"><button onclick="speakText('${w.word}')">🔊</button><button onclick="practiceOne('${w.word}')">練這個</button></div></div>`;
-  }).join("");
+  };
+  const groups={};
+  items.forEach(it=>{ const c=wbCatOf(it.w); (groups[c]=groups[c]||[]).push(it); });
+  const order=Object.keys(groups).sort((a,b)=>{
+    if(wbGroup==="unit"||wbGroup==="level"){ return (+String(a).replace(/\D/g,"")||0)-(+String(b).replace(/\D/g,"")||0); }
+    return groups[b].length-groups[a].length;
+  });
+  list.innerHTML=order.map(c=>`<div class="wb-cat-h">${escapeHTML(c)}<span>${groups[c].length}</span></div>`+groups[c].map(itemHTML).join("")).join("");
 }
 function practiceOne(word){
   const w=WORDS.find(x=>x.word===word); if(!w) return;
@@ -1568,6 +1640,7 @@ function renderUnits(){
   document.getElementById("unitsPassed").textContent=passed;
   document.getElementById("unitsTotal").textContent=max;
   document.getElementById("unitsProg").style.width=(passed/max*100)+"%";
+  renderCombos();
 }
 function openUnit(nu){ if(!unitUnlocked(nu)){ toast("先通過上一關 🔒"); return; } udCur=nu; go("unitdetail"); }
 function renderUnitDetail(){
@@ -2315,5 +2388,71 @@ else{if(document.readyState==='loading')document.addEventListener('DOMContentLoa
 })();
 </script>
 <!--RIDGELINE_BRAND_END-->
+
+<script>/*ENG_SYNC_MODULE*/
+window.__ENG_APP="vocab6000";window.__ENG_LABEL="高中6000單字";
+(function(){
+  var APP=window.__ENG_APP||'app', LABEL=window.__ENG_LABEL||document.title;
+  var K={url:'eng_sync_url',key:'eng_sync_key',child:'eng_child'};
+  function LS(k){ try{return localStorage.getItem(k)||''}catch(e){return ''} }
+  function cfg(){ return {url:LS(K.url), key:LS(K.key), child:LS(K.child)}; }
+  // 一次性設定：#sync=url~key~child
+  try{
+    var m=(location.hash||'').match(/sync=(.+)$/);
+    if(m){
+      var p=m[1].split('~').map(function(s){try{return decodeURIComponent(s)}catch(e){return s}});
+      if(p[0]) localStorage.setItem(K.url, p[0].replace(/\/+$/,''));
+      if(p[1]) localStorage.setItem(K.key, p[1]);
+      if(p[2]) localStorage.setItem(K.child, p[2]);
+      try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+      setTimeout(function(){ alert('✅ 家長後台已設定：這台是「'+(p[2]||'')+'」的裝置，之後所有單字 App 都會自動回報進度。'); },300);
+    }
+  }catch(e){}
+  function num(v){ v=Number(v); return isFinite(v)?v:0; }
+  function summary(){
+    try{
+      var S=window.S||{};
+      var mastered=(typeof masteredCount==='function')?masteredCount():0;
+      var total=(typeof WORDS!=='undefined'&&WORDS)?WORDS.length:0;
+      var units=Object.keys(S.units||{}).filter(function(u){var x=S.units[u];return x&&x.passed}).length;
+      var combos=Object.keys(S.combos||{}).filter(function(b){var x=S.combos[b];return x&&x.passed}).length;
+      var wrongA=(typeof wrongCount==='function')?wrongCount():Object.keys(S.wrong||{}).filter(function(k){return S.wrong[k]&&!S.wrong[k].graduated}).length;
+      var wrongC=Object.keys(S.wrong||{}).filter(function(k){return S.wrong[k]&&S.wrong[k].graduated}).length;
+      var st=S.stats||{}, xp=st.xp||0, lv=(typeof xpLevel==='function')?xpLevel(xp):1;
+      return {mastered:num(mastered),total:num(total),unitsPassed:num(units),combosPassed:num(combos),wrongActive:num(wrongA),wrongConquered:num(wrongC),streak:num(st.streak),xp:num(xp),level:num(lv)};
+    }catch(e){ return {}; }
+  }
+  var t=null;
+  function push(beacon){
+    var c=cfg(); if(!c.url||!c.child) return;
+    var body=JSON.stringify({child:c.child, app:APP, label:LABEL, summary:summary(), ts:Date.now(), key:c.key});
+    var url=c.url+'/report';
+    try{
+      if(beacon && navigator.sendBeacon){ navigator.sendBeacon(url, new Blob([body],{type:'text/plain'})); return; }
+      fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:body,keepalive:true})
+        .then(function(){setDot(true)}).catch(function(){setDot(false)});
+    }catch(e){}
+  }
+  function schedule(){ var c=cfg(); if(!c.url||!c.child) return; if(t) clearTimeout(t); t=setTimeout(function(){push(false)}, 6000); }
+  if(typeof window.save==='function'){ var _os=window.save; window.save=function(){ var r=_os.apply(this,arguments); schedule(); return r; }; try{save=window.save}catch(e){} }
+  window.addEventListener('pagehide',function(){ push(true); });
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') push(true); });
+  function setDot(ok){ var d=document.getElementById('engSyncDot'); if(d) d.style.background=ok?'#2eb872':'#e8504f'; }
+  window.engSyncNow=function(){ push(false); };
+  window.engSync={push:push,cfg:cfg,summary:summary};
+  setTimeout(function(){
+    var c=cfg(); if(!(c.url&&c.child)) return;
+    if(document.getElementById('engSyncBadge')) return;
+    var b=document.createElement('div'); b.id='engSyncBadge';
+    b.style.cssText='position:fixed;left:8px;bottom:calc(var(--nav-h,60px) + env(safe-area-inset-bottom) + 8px);z-index:60;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:3px 9px;border-radius:999px;display:flex;align-items:center;gap:5px;cursor:pointer';
+    b.innerHTML='<span id="engSyncDot" style="width:8px;height:8px;border-radius:50%;background:#2eb872;display:inline-block"></span>☁️ '+c.child;
+    b.title='點我立即同步';
+    b.onclick=function(){ engSyncNow(); };
+    document.body.appendChild(b);
+    push(false);
+  }, 900);
+})();
+</script>
+
 </body>
 </html>
