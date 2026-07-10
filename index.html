@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src https://*.fullmodel.workers.dev; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src https://eng-progress.fullmodel.workers.dev; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5a623">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -793,6 +793,10 @@ let S = load();
 if(!S.wrong) S.wrong={};
 if(!S.combos) S.combos={};
 S.settings.quizCount=50; // K28: 一律最完整 50 題
+/* 忍者修行：跨App共用經驗錢包(同網域，灌進火影修行計畫) */
+const NINJA_APP='vocab6000';
+window.Ninja=window.Ninja||(function(){var K='ninja_xp_v1';function L(){try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return{}}}function G(){var w=L();w.xp=w.xp||0;w.bySrc=w.bySrc||{};w.correct=w.correct||0;w.units=w.units||0;w.jutsu=w.jutsu||[];w.seen=w.seen||{};return w}function P(w){w.ts=Date.now();try{localStorage.setItem(K,JSON.stringify(w))}catch(e){}}return{get:G,gain:function(n,a,o){o=o||{};var w=G();w.xp+=n;w.bySrc[a]=(w.bySrc[a]||0)+n;w.correct+=(o.correct||0);w.units+=(o.unit||0);P(w);return w},backfill:function(a,x,o){var w=G();if(w.seen[a])return w;o=o||{};w.xp+=x;w.bySrc[a]=(w.bySrc[a]||0)+x;w.correct+=(o.correct||0);w.units+=(o.unit||0);w.seen[a]=1;P(w);return w}}})();
+(function(){try{var tc=0,s=S.srs||{};for(var k in s)tc+=(s[k].correct||0);Ninja.backfill(NINJA_APP,tc*10,{correct:tc});}catch(e){}})();
 if(!S.units) S.units={};
 if(!S.profile) S.profile={cls:"",seat:"",name:""};
 if(Object.keys(S.wrong).length===0){ for(const k in S.srs){ const e=S.srs[k]; if(e && e.wrong>0 && (e.box||1)<5) S.wrong[k]={n:e.wrong, ts:e.due||0}; } }
@@ -831,7 +835,7 @@ function applyRate(word, kind){
   const r=todayRec(); r.cards++; if(kind==="no") r.wrong++; else r.correct++;
   if(wasNew) r.newCards=(r.newCards||0)+1;
   else if(wasDue) r.reviewCards=(r.reviewCards||0)+1;
-  if(kind!=="no") addXp(wasNew?5:3);
+  if(kind!=="no"){ addXp(wasNew?5:3); Ninja.gain(10,NINJA_APP,{correct:1}); }
   if(!wasMastered && e.box>=5) addXp(20); // 精熟事件大獎
   bumpStreak();
 }
@@ -2401,7 +2405,7 @@ window.__ENG_SUMMARY=function(){
   var st=S.stats||{}, xp=st.xp||0;
   var lv=(typeof xpLevel==='function')?xpLevel(xp):null;
   var learned=Object.keys(S.srs||{}).length;   // 碰過(有 SRS 記錄)= 已學過
-  return {pct: total?Math.round(learned/total*100):null, pctLabel:'已學過',
+  return {pct: total?Math.round(learned/total*100):null, pctLabel:'已學過', total: total,
     streak: st.streak||0,
     metrics:[{k:'已學過',v:learned+'/'+total},{k:'精熟',v:mastered},{k:'單元過關',v:units},
              {k:'綜合過關',v:combos},{k:'待清錯題',v:wa},{k:'等級',v:lv?('Lv '+lv):'—'}]};
@@ -2428,6 +2432,8 @@ window.__ENG_SUMMARY=function(){
   function push(beacon){
     var c=cfg(); if(!c.url||!c.child) return;
     var r=report();
+    // 把 App 內的真實總數存到共用 key，供「一鍵導入頁」用(免寫死、內容變了也跟得上)
+    try{ if(typeof r.total==='number' && r.total>0) localStorage.setItem('eng_total_'+APP, r.total); }catch(e){}
     var body=JSON.stringify({child:c.child, app:APP, label:LABEL, key:c.key, ts:Date.now(),
       pct:(r.pct===undefined?null:r.pct), pctLabel:r.pctLabel||'進度',
       streak:(r.streak===undefined?null:r.streak), metrics:r.metrics||[]});
@@ -2465,6 +2471,7 @@ window.__ENG_SUMMARY=function(){
   }, 900);
 })();
 </script>
+
 
 
 
