@@ -2391,7 +2391,7 @@ else{if(document.readyState==='loading')document.addEventListener('DOMContentLoa
 <script>/*ENG_SYNC_MODULE_V2*/
 window.__ENG_APP="vocab6000";window.__ENG_LABEL="高中6000單字";
 window.__ENG_SUMMARY=function(){
-  var S=window.S||{};
+  if(typeof S==='undefined'||!S) return {};   // App 的 S 是 top-level let(不在 window 上)，用裸名取
   var total=(typeof WORDS!=='undefined'&&WORDS)?WORDS.length:0;
   var mastered=(typeof masteredCount==='function')?masteredCount():0;
   var units=Object.keys(S.units||{}).filter(function(u){return S.units[u]&&S.units[u].passed}).length;
@@ -2465,6 +2465,7 @@ window.__ENG_SUMMARY=function(){
   }, 900);
 })();
 </script>
+
 
 
 
