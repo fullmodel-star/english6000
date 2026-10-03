@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>單字進度 · 老師彙整</title>
+<style>
+  :root{ --bg:#f5f6f8; --card:#fff; --text:#222b38; --muted:#5f6b7a; --line:#e8ebf0; --accent:#e8504f; --green:#2eb872; --blue:#4d8df6; }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif; background:var(--bg); color:var(--text); padding:18px; max-width:1000px; margin:0 auto}
+  h1{font-size:20px; margin:0 0 4px}
+  .muted{color:var(--muted); font-size:13px}
+  .bar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:16px 0}
+  .btn{border:none; background:var(--accent); color:#fff; font-weight:700; padding:10px 16px; border-radius:12px; cursor:pointer; font-size:14px}
+  .btn.sec{background:var(--card); color:var(--text); border:1px solid var(--line)}
+  .drop{border:2px dashed var(--line); border-radius:16px; padding:26px; text-align:center; color:var(--muted); background:var(--card); cursor:pointer}
+  .drop.over{border-color:var(--accent); color:var(--accent)}
+  table{width:100%; border-collapse:collapse; background:var(--card); border-radius:14px; overflow:hidden; box-shadow:0 6px 22px rgba(40,50,70,.08); font-size:13px}
+  th,td{padding:9px 10px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap}
+  th{background:#eef1f5; cursor:pointer; user-select:none; font-size:12px; color:var(--muted)}
+  th:hover{color:var(--text)}
+  td.name{text-align:left; font-weight:700}
+  tr:hover td{background:#fafbfc}
+  .pct{font-weight:800}
+  .empty{color:var(--muted); text-align:center; padding:30px}
+  .pill{display:inline-block; min-width:30px; padding:2px 8px; border-radius:999px; font-weight:800; color:#fff; font-size:12px}
+</style>
+</head>
+<body>
+  <h1>📊 單字進度 · 老師彙整</h1>
+  <div class="muted">把學生用 App「匯出進度給老師」產生的 .json 檔拖進來（可一次多個），即可彙整成班級總表。完全離線、不上傳。</div>
+
+  <div class="bar">
+    <input type="file" id="files" accept="application/json,.json" multiple class="hide" style="display:none" onchange="loadFiles(this.files)">
+    <button class="btn" onclick="document.getElementById('files').click()">📥 匯入學生檔（可多選）</button>
+    <button class="btn sec" onclick="exportCSV()">📤 匯出 CSV</button>
+    <button class="btn sec" onclick="clearAll()">🗑️ 清空</button>
+    <span class="muted" id="count">尚未匯入</span>
+  </div>
+
+  <div class="drop" id="drop" onclick="document.getElementById('files').click()">把學生 .json 檔拖到這裡，或點此選檔</div>
+
+  <table id="tbl" style="margin-top:16px; display:none">
+    <thead><tr id="thead"></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none">沒有有效的學生資料</div>
+
+<script>
+let rows=[];
+const COLS=[
+  {k:"cls",t:"班級"},{k:"seat",t:"座號"},{k:"name",t:"姓名"},
+  {k:"masteredPct",t:"精熟%"},{k:"mastered",t:"精熟字"},{k:"unitsPassed",t:"過關"},
+  {k:"streak",t:"連續天"},{k:"level",t:"等級"},{k:"wrongActive",t:"待清錯題"},{k:"wrongConquered",t:"已征服"},{k:"ts",t:"回報時間"},
+];
+let sortK="cls", sortAsc=true;
+
+function loadFiles(files){
+  let pending=files.length;
+  if(!pending) return;
+  [...files].forEach(f=>{
+    const r=new FileReader();
+    r.onload=()=>{ try{ addReport(JSON.parse(r.result)); }catch(e){} if(--pending===0) render(); };
+    r.onerror=()=>{ if(--pending===0) render(); };
+    r.readAsText(f);
+  });
+}
+function addReport(d){
+  if(!d || d.type!=="vocab-student-report" || !d.summary) return;
+  const p=d.profile||{}, s=d.summary;
+  const key=(p.cls||"")+"|"+(p.seat||"")+"|"+(p.name||"");
+  const row={
+    cls:p.cls||"", seat:p.seat||"", name:p.name||"(未填名)",
+    mastered:s.mastered||0, total:s.total||2000,
+    masteredPct: Math.round((s.mastered||0)/(s.total||2000)*100),
+    unitsPassed:s.unitsPassed||0, streak:s.streak||0, level:s.level||1,
+    wrongActive:s.wrongActive||0, wrongConquered:s.wrongConquered||0,
+    ts: d.ts? new Date(d.ts).toLocaleDateString("zh-TW"):"",
+  };
+  // 同一學生只留最新
+  const i=rows.findIndex(x=>(x.cls+"|"+x.seat+"|"+x.name)===key);
+  if(i>=0) rows[i]=row; else rows.push(row);
+}
+function pctColor(p){ return p>=80?"var(--green)":p>=40?"var(--blue)":"#c9911f"; }
+function render(){
+  document.getElementById("count").textContent = rows.length? (rows.length+" 位學生"):"尚未匯入";
+  const tbl=document.getElementById("tbl"), empty=document.getElementById("empty"), drop=document.getElementById("drop");
+  if(!rows.length){ tbl.style.display="none"; empty.style.display="none"; drop.style.display=""; return; }
+  drop.style.display="none"; tbl.style.display=""; empty.style.display="none";
+  rows.sort((a,b)=>{ let x=a[sortK],y=b[sortK]; if(typeof x==="string"){ return sortAsc? String(x).localeCompare(y):String(y).localeCompare(x);} return sortAsc?x-y:y-x; });
+  document.getElementById("thead").innerHTML=COLS.map(c=>`<th onclick="sortBy('${c.k}')">${c.t}${sortK===c.k?(sortAsc?" ▲":" ▼"):""}</th>`).join("");
+  document.getElementById("tbody").innerHTML=rows.map(r=>`<tr>
+    <td>${esc(r.cls)}</td><td>${esc(r.seat)}</td><td class="name">${esc(r.name)}</td>
+    <td><span class="pill" style="background:${pctColor(r.masteredPct)}">${r.masteredPct}%</span></td>
+    <td>${r.mastered}</td><td>${r.unitsPassed}/40</td><td>${r.streak}</td><td>${r.level}</td>
+    <td>${r.wrongActive}</td><td>${r.wrongConquered}</td><td class="muted">${esc(r.ts)}</td>
+  </tr>`).join("");
+}
+function sortBy(k){ if(sortK===k) sortAsc=!sortAsc; else { sortK=k; sortAsc=true; } render(); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function clearAll(){ rows=[]; render(); }
+function exportCSV(){
+  if(!rows.length) return;
+  const head=COLS.map(c=>c.t).join(",");
+  const body=rows.map(r=>COLS.map(c=> c.k==="masteredPct"? r.masteredPct+"%" : ('"'+String(r[c.k]).replace(/"/g,'""')+'"')).join(",")).join("\n");
+  const blob=new Blob(["﻿"+head+"\n"+body],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="班級單字進度.csv"; a.click();
+}
+// 拖放
+const drop=document.getElementById("drop");
+["dragover","dragenter"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault(); drop.classList.add("over");}));
+["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault(); drop.classList.remove("over");}));
+drop.addEventListener("drop",ev=>{ if(ev.dataTransfer&&ev.dataTransfer.files) loadFiles(ev.dataTransfer.files); });
+document.body.addEventListener("dragover",e=>e.preventDefault());
+document.body.addEventListener("drop",e=>{ e.preventDefault(); if(e.target!==drop && e.dataTransfer&&e.dataTransfer.files) loadFiles(e.dataTransfer.files); });
+</script>
+</body>
+</html>

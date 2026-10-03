@@ -1,0 +1,98 @@
+/* =====================================================================
+   活潑層 lively-core v1.0（2026-10-03，英語對外家族共用）
+   來源：packages/lively/lively-core.css（由 sync_lively.py 複製進各 App，請改來源再重跑）
+   三份檔案分工：
+     lively-core.css   全家族共用（字型、彩帶、連對提示、頁首、浮動鈕整理、動畫）
+     lively-engine.css 各群畫面結構的接法（vocab／conv／qbank…）
+     lively-theme.css  各支淺色色票（--lv-btn／--lv-ink／--lv-acc／--lv-soft／--lv-soft2），腳本依主題色算出
+   設計原則（老闆 2026-10-03）：米白為主、主色只用在重點、顏色不要太深 → 按鈕＝中淺色底＋同色相深色字。
+   品牌層（頁首山形 PNG＋App 名、頁尾簽名）不動。外部資源：Nunito（OFL-1.1）、Fluent Emoji（MIT）、canvas-confetti（ISC）。
+   退路：活潑層檔案沒載入時 App 回到原樣。
+   ===================================================================== */
+
+@font-face{font-family:"LvNum";font-style:normal;font-weight:800;font-display:swap;
+  src:url(vendor/nunito/nunito-latin-800-normal.woff2) format("woff2");unicode-range:U+0000-00FF}
+@font-face{font-family:"LvNum";font-style:normal;font-weight:900;font-display:swap;
+  src:url(vendor/nunito/nunito-latin-900-normal.woff2) format("woff2");unicode-range:U+0000-00FF}
+
+/* 語意色（全家族固定）：答對＝綠、答錯＝珊瑚紅、暖陽＝連續天數／星星 */
+:root{
+  --lv-ok:#1E7A4C;--lv-ok-k:#1E7A4C;--lv-ok-soft:#E3F4EA;--lv-ok-line:#7CC59E;
+  --lv-no:#B3261E;--lv-no-k:#C8372D;--lv-no-soft:#FCE6E2;--lv-no-line:#E79A90;
+  --lv-sun:#8A4B00;--lv-sun-soft:#FFF0D0;
+  --lv-paper:#FBF8F1;--lv-card:#FFFFFF;--lv-line:#ECE5D6;--lv-text:#1F2933;--lv-muted:#6B6352;
+}
+html[data-theme="dark"],html[data-theme="dark"] body{
+  --lv-ok:#6FD39C;--lv-ok-soft:#183427;--lv-ok-line:#2F6B4B;
+  --lv-no:#FF9A8F;--lv-no-soft:#3A1F1C;--lv-no-line:#7A3A33;
+  --lv-sun:#FFC960;--lv-sun-soft:#3A2C12;
+  --lv-paper:#14191E;--lv-card:#1C2228;--lv-line:#2A323A;--lv-text:#E8EDF1;--lv-muted:#9AA7B2;
+}
+/* 有些群組的深色模式直接跟系統（不設 data-theme），同一組值再給一次 */
+@media (prefers-color-scheme:dark){html:not([data-theme]),html:not([data-theme]) body{
+  --lv-ok:#6FD39C;--lv-ok-soft:#183427;--lv-ok-line:#2F6B4B;
+  --lv-no:#FF9A8F;--lv-no-soft:#3A1F1C;--lv-no-line:#7A3A33;
+  --lv-sun:#FFC960;--lv-sun-soft:#3A2C12;
+  --lv-paper:#14191E;--lv-card:#1C2228;--lv-line:#2A323A;--lv-text:#E8EDF1;--lv-muted:#9AA7B2;
+}}
+
+/* ---------- 頁首：淡主色底＋山丘剪影（山形 PNG 與 App 名不動） ---------- */
+.rl-appbar{position:relative;overflow:hidden;background:var(--lv-soft)!important;--on:var(--lv-text);color:var(--lv-text)}
+.rl-appbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:30px;pointer-events:none;background:var(--lv-soft2);opacity:.75;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'%3E%3Cpath d='M0 60 L0 38 Q60 14 120 34 T250 30 T400 22 L400 60Z'/%3E%3C/svg%3E") bottom/100% 100% no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'%3E%3Cpath d='M0 60 L0 38 Q60 14 120 34 T250 30 T400 22 L400 60Z'/%3E%3C/svg%3E") bottom/100% 100% no-repeat}
+.rl-appbar > *{position:relative;z-index:1}
+/* 副標原本是 62% 透明字，淡底上只有約 4.1 → 改實色灰 */
+.rl-appbar .rl-sub{color:var(--lv-muted)}
+/* 深色：頁首／頁尾山形換同資料夾的官方白色版（901 起的做法；不重新上色、只換官方檔） */
+html[data-theme="dark"] .rl-appbar img.rl-glyph,html[data-theme="dark"] .rl-signature img.rl-sig-glyph{content:url(rl-mark-everest-white.png)}
+@media (prefers-color-scheme:dark){html:not([data-theme]) .rl-appbar img.rl-glyph,html:not([data-theme]) .rl-signature img.rl-sig-glyph{content:url(rl-mark-everest-white.png)}}
+
+/* 家族「安裝到桌面」按鈕（原本用品牌層破曉金 #DE9A45；品牌規範：品牌層的金不拿去做按鈕）→ 各支按鈕色 */
+#rdgInstallBtn{background:var(--lv-btn)!important;color:var(--lv-ink)!important;border:0!important;box-shadow:0 4px 0 var(--lv-btn-d)!important}
+/* 家族「📝 我的複習」浮動鈕與面板主按鈕（rvc 模組原本深紫）→ 收進色系 */
+.rvc-fab,.rvc-primary{background:var(--lv-btn)!important;color:var(--lv-ink)!important;border-color:transparent!important;box-shadow:0 4px 0 var(--lv-btn-d)!important}
+
+/* ---------- Fluent Emoji 圖示 ---------- */
+.lv-ico{width:28px;height:28px;display:block}
+.lv-ico-sm{width:24px;height:24px;display:block}
+.lv-ico-inline{width:1.2em;height:1.2em;vertical-align:-.22em;display:inline-block}
+
+/* ---------- 新手第一步卡（有接的 engine 才會出現） ---------- */
+.lv-hero{margin-top:14px;padding:20px 18px 18px;border-radius:24px;background:linear-gradient(160deg,var(--lv-soft) 0%,var(--lv-sun-soft) 100%);box-shadow:0 0 0 1.5px var(--lv-line);text-align:center;color:var(--lv-text)}
+.lv-hero .lv-hero-ico{width:64px;height:64px;margin:0 auto 6px;display:block}
+.lv-hero h3{font-size:20px;font-weight:900;margin:2px 0 4px}
+.lv-hero p{margin:0 0 14px;font-size:14px;color:var(--lv-muted)}
+.lv-hero .lv-steps{display:flex;justify-content:center;gap:6px;margin:0 0 14px;font-size:12.5px;font-weight:700;flex-wrap:wrap}
+.lv-hero .lv-steps span{background:var(--lv-card);border-radius:20px;padding:4px 10px;box-shadow:0 0 0 1px var(--lv-line)}
+.lv-hero .lv-go{display:block;width:100%;border:0;border-radius:18px;padding:15px;font:inherit;font-size:18px;font-weight:800;cursor:pointer;
+  background:var(--lv-btn);color:var(--lv-ink);box-shadow:0 5px 0 var(--lv-btn-d)}
+.lv-hero .lv-go:active{transform:translateY(4px);box-shadow:0 1px 0 var(--lv-btn-d)}
+
+/* ---------- 答對／答錯回饋 ---------- */
+.lv-combo{position:fixed;left:50%;top:30%;z-index:2147483100;transform:translate(-50%,0);pointer-events:none;
+  background:linear-gradient(90deg,#D9480F,#E8590C);color:#fff;/* 白字 ≥3.58（22px 粗體＝大字門檻 3） */
+  font-weight:900;font-size:22px;padding:10px 22px;border-radius:30px;box-shadow:0 8px 24px rgba(217,72,15,.35);
+  font-family:"LvNum",system-ui,"PingFang TC","Microsoft JhengHei",sans-serif;white-space:nowrap}
+#lvConfetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2147483000}
+
+@media (prefers-reduced-motion:no-preference){
+  .lv-pop{animation:lvPop .42s cubic-bezier(.3,1.6,.5,1)}
+  .lv-shake{animation:lvShake .4s ease}
+  .lv-combo{animation:lvCombo 1.2s ease forwards}
+  .lv-hero .lv-hero-ico{animation:lvBob 2.4s ease-in-out infinite}
+  .lv-flame{animation:lvFlame 1.6s ease-in-out infinite;transform-origin:50% 90%}
+  .lv-bump{animation:lvPop .5s cubic-bezier(.3,1.6,.5,1)}
+}
+@keyframes lvPop{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes lvShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@keyframes lvCombo{0%{opacity:0;transform:translate(-50%,16px) scale(.7)}18%{opacity:1;transform:translate(-50%,0) scale(1.08)}30%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px)}}
+@keyframes lvBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+@keyframes lvFlame{0%,100%{transform:scale(1) rotate(-4deg)}50%{transform:scale(1.15) rotate(4deg)}}
+
+/* ---------- 浮動鈕整理（家族共用模組 engwc／rvc／rdgInstall） ---------- */
+body.lv-has-installbar #rdgInstall{display:none!important}
+body:has(.engwc-ov.show) #onboardOverlay{visibility:hidden}
+body:has(.overlay.show) .engwc-help,body:has(.overlay.show) .engwc-home,body:has(.overlay.show) .rvc-fab,body:has(.overlay.show) #rdgInstall,
+body:has(.sheet-bg.show) .engwc-help,body:has(.sheet-bg.show) .engwc-home,body:has(.sheet-bg.show) .rvc-fab,body:has(.sheet-bg.show) #rdgInstall{display:none!important}
+.engwc-start{background:var(--lv-btn)!important;color:var(--lv-ink)!important;box-shadow:0 4px 0 var(--lv-btn-d)}
