@@ -1,0 +1,14 @@
+/* 由 packages/lively/sync_lively.py 產生，請勿手改（改 apps.json 再重跑）。
+   904_english6000｜主題色相來源 #f5a623｜engine=vocab｜level=mid */
+:root{--lv-engine:vocab;--lv-level:mid}
+html:not([data-theme="dark"]),html:not([data-theme="dark"]) body{
+  --lv-btn:#DD9D31;--lv-btn-d:#A07327;--lv-ink:#4C330B;--lv-acc:#916318;
+  --lv-soft:#FBF3E4;--lv-soft2:#F0E0C7;
+}
+html[data-theme="dark"],html[data-theme="dark"] body{
+  --lv-btn:#DD9D31;--lv-btn-d:#A07327;--lv-ink:#4C330B;--lv-acc:#DFA13A;
+  --lv-soft:#413725;--lv-soft2:#625237;
+}
+@media (prefers-color-scheme:dark){html:not([data-theme]),html:not([data-theme]) body{
+  --lv-acc:#DFA13A;--lv-soft:#413725;--lv-soft2:#625237;
+}}
