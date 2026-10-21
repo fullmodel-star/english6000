@@ -1,0 +1,167 @@
+/* 活潑層 engine：vocab（901／902／904／907／908／919 單字引擎）
+   來源：packages/lively/engines/vocab.css → 各 App 的 lively-engine.css */
+
+/* ---------- 把 App 原本的變數接到色票（html 與 body 都要設：.theme-* 會在 body 上重設 --accent） ---------- */
+html:not([data-theme="dark"]),html:not([data-theme="dark"]) body,
+html[data-theme="dark"],html[data-theme="dark"] body{
+  --bg:var(--lv-paper); --card:var(--lv-card); --line:var(--lv-line); --text:var(--lv-text); --muted:var(--lv-muted);
+  --accent:var(--lv-acc); --accent-d:var(--lv-acc); --accent-soft:var(--lv-soft);
+  --green:var(--lv-ok); --green-soft:var(--lv-ok-soft);
+  --blue:var(--lv-acc); --blue-soft:var(--lv-soft);
+  --amber:var(--lv-sun); --amber-soft:var(--lv-sun-soft);
+  --shadow:0 0 0 1px var(--lv-line), 0 4px 14px rgba(60,50,30,.06);
+}
+html[data-theme="dark"],html[data-theme="dark"] body{--shadow:0 0 0 1px var(--lv-line)}
+html,body{background:var(--lv-paper)}
+
+/* 數字與英文單字用圓體 */
+.tile .v,#goalNum,#streakHome,#lvText,#xpText,.flash .word,#qScore,.uc-top b,.bars .b span{font-family:"LvNum",-apple-system,"Segoe UI",system-ui,"PingFang TC","Microsoft JhengHei",sans-serif}
+
+/* ---------- 卡片、首頁四格 ---------- */
+.rl-appbar{border-radius:22px}
+.panel{border-radius:22px;box-shadow:var(--shadow)}
+.tiles .tile{border-radius:20px;background:var(--card);box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center}
+.tiles .tile .ico{grid-row:1 / span 2;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--lv-soft)}
+.tiles .tile .ico[data-tint="coral"]{background:var(--lv-no-soft)}
+.tiles .tile .ico[data-tint="green"]{background:var(--lv-ok-soft)}
+.tiles .tile .ico[data-tint="teal"]{background:var(--lv-soft)}
+.tiles .tile .ico[data-tint="sun"]{background:var(--lv-sun-soft)}
+.tiles .tile .v{font-size:26px;font-weight:900;line-height:1.1;color:var(--text)}
+.tiles .tile .l{margin-top:0}
+.install-btn{background:var(--card)!important;color:var(--lv-acc)!important;border-radius:18px;box-shadow:0 0 0 1.5px var(--line),0 3px 0 var(--line)}
+.scope-chip{color:var(--lv-acc);background:var(--lv-soft)}
+body.lv-fresh #view-home .tiles{display:none!important}
+
+/* ---------- 按鈕：中淺色底＋深色字、有厚度 ---------- */
+.btn{background:var(--lv-btn);color:var(--lv-ink);box-shadow:0 4px 0 var(--lv-btn-d);border-radius:18px;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--lv-btn-d)}
+.btn.sec{background:var(--card);color:var(--text);box-shadow:0 0 0 1.5px var(--line),0 4px 0 var(--line)}
+.btn.sec:active{box-shadow:0 0 0 1.5px var(--line),0 1px 0 var(--line)}
+.btn.green,.btn.done{background:var(--lv-btn)!important;color:var(--lv-ink)!important}
+.btn.blue{background:var(--lv-soft);color:var(--lv-acc);box-shadow:0 0 0 1.5px var(--lv-soft2),0 4px 0 var(--lv-soft2)}
+#mainCta{font-size:18px;font-weight:800;letter-spacing:.5px;box-shadow:0 5px 0 var(--lv-btn-d)}
+/* 行內寫死顏色的按鈕（灌籃／三角洲／只重做錯題）→ 淡色塊 */
+button[onclick^="startHoop"]{background:var(--lv-sun-soft)!important;color:var(--lv-sun)!important;box-shadow:0 0 0 1.5px var(--line),0 4px 0 var(--line)!important}
+button[onclick^="openDelta"]{background:var(--lv-soft)!important;color:var(--lv-acc)!important;box-shadow:0 0 0 1.5px var(--lv-soft2),0 4px 0 var(--lv-soft2)!important}
+#examBuildBtn,button[onclick^="redoWrong"]{background:var(--lv-sun-soft)!important;color:var(--lv-sun)!important;box-shadow:0 0 0 1.5px var(--line),0 4px 0 var(--line)!important}
+.quick-actions button{background:var(--card);box-shadow:0 0 0 1.5px var(--line),0 3px 0 var(--line);transition:transform .08s,box-shadow .08s}
+.quick-actions button:active{transform:translateY(3px);box-shadow:0 0 0 1.5px var(--line)}
+.chip.on,.wb-sort button.on,.qc-seg button.on,.wb-cat-h span{background:var(--lv-btn);color:var(--lv-ink)}
+.switch.on{background:var(--lv-btn)}
+.ob-dot.on{background:var(--lv-btn)}
+
+/* 進度條、XP、圓環、長條圖 */
+.progress-line>i{background:var(--lv-btn)}
+/* 今日任務三條進度（行內寫死 var(--accent)／var(--blue)／var(--amber)）→ 淺色；「今天沒有」的灰條不動 */
+#taskSegs .progress-line>i:not([style*="--line"]){background:var(--lv-btn)!important}
+#xpBar{background:linear-gradient(90deg,var(--lv-btn),#F2C14E)!important;border-radius:9px}
+#goalRing{stroke:var(--lv-btn)}
+.bars .b .bar{background:var(--lv-btn)}
+
+/* ---------- 單字卡：背面改淡色 ---------- */
+.face.front{box-shadow:0 0 0 1.5px var(--line),0 8px 22px rgba(60,50,30,.07)}
+.face.back{background:
+  radial-gradient(circle at 20% 15%,color-mix(in srgb,var(--lv-soft2) 70%,transparent) 0 2px,transparent 3px) 0 0/22px 22px,
+  var(--lv-soft)!important;color:var(--text);box-shadow:inset 0 0 0 2px var(--lv-soft2)}
+.face.back .pos,.face.back .speak,.face.back .star{background:var(--card)!important;color:var(--lv-acc)!important}
+.face.back .hint{color:var(--muted)!important}
+.face.back .example,.face.back .sense2{background:color-mix(in srgb,var(--card) 75%,transparent)!important}
+.face.back .sense2 b{background:var(--lv-soft2)!important}
+.face .pos{background:var(--lv-soft);color:var(--lv-acc)}
+.speak{background:var(--lv-soft);color:var(--lv-acc)}
+.rate .no{background:var(--lv-no-soft);color:var(--lv-no)}
+.rate .ok{background:var(--lv-ok-soft);color:var(--lv-ok)}
+.rate .easy{background:var(--lv-sun-soft);color:var(--lv-sun)}
+.rate button{box-shadow:0 0 0 1.5px var(--line),0 4px 0 var(--line)}
+
+/* ---------- 測驗：答對綠、答錯珊瑚紅 ---------- */
+.opt{box-shadow:0 0 0 1.5px var(--line),0 4px 0 var(--line);border-radius:16px}
+.opt:active{transform:translateY(3px);box-shadow:0 0 0 1.5px var(--line),0 1px 0 var(--line)}
+.opt.correct{background:var(--lv-ok-soft);color:var(--lv-ok);box-shadow:0 0 0 2px var(--lv-ok-line),0 4px 0 var(--lv-ok-line)}
+.opt.correct .k{background:var(--lv-ok-k);color:#fff}
+.opt.wrong{background:var(--lv-no-soft);color:var(--lv-no);box-shadow:0 0 0 2px var(--lv-no-line),0 4px 0 var(--lv-no-line)}
+.opt.wrong .k{background:var(--lv-no-k);color:#fff}
+.wb-item.boss .w{color:var(--lv-no)}
+.wb-item.boss{background:color-mix(in srgb,var(--lv-no-k) 8%,transparent)}
+.last-pick{color:var(--lv-sun)}
+
+/* ---------- 單元 ---------- */
+.unit-card{border-radius:18px;box-shadow:var(--shadow)}
+.unit-card.locked{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line);opacity:.85}
+.unit-card.passed{background:var(--lv-soft);color:var(--lv-acc);box-shadow:0 0 0 1.5px var(--lv-soft2)}
+.unit-card.open{outline:2.5px solid var(--lv-btn);outline-offset:-2.5px}
+
+/* ---------- 底部選單 ---------- */
+.nav{background:var(--card);border-top:1px solid var(--line)}
+.nav button .ni{display:flex;align-items:center;justify-content:center;width:46px;height:28px;border-radius:14px;transition:background .2s}
+.nav button.on{color:var(--lv-acc)}
+.nav button.on .ni{background:var(--lv-soft)}
+
+/* 連對與主按鈕呼吸 */
+@media (prefers-reduced-motion:no-preference){
+  #mainCta{animation:lvBreath 2.8s ease-in-out infinite}
+  #mainCta:active{animation:none}
+  .nav button.on .lv-ico-sm{animation:lvPop .4s cubic-bezier(.3,1.6,.5,1)}
+}
+/* ---------- 作業簿版（共用零件在 lively-core.css；這裡只放單字群自己的位置） ---------- */
+#taskCard h3 .lv-line-inline{color:var(--lv-acc)}
+.topbar .icon-btn.lv-has-line{font-size:20px;color:var(--text)}
+.vn-search-entry .vn-mag{color:var(--lv-acc)}
+.vn-search-entry .vn-mag .lv-line{width:20px;height:20px}
+/* 底部選單：線條圖示，選中的那格填淡色並彈一下 */
+.nav button .ni .lv-line{width:24px;height:24px}
+.nav button.on .ni .lv-line{stroke-width:2.2}
+@media (prefers-reduced-motion:no-preference){.nav button.on .ni .lv-line{animation:lvPop .4s cubic-bezier(.3,1.6,.5,1)}}
+/* 首頁快捷鈕：線條圖示放在彩色小方塊裡（活潑但同一套） */
+.quick-actions button > span.lv-has-line{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--lv-soft);color:var(--lv-acc)}
+.quick-actions button > span[data-tint="sun"]{background:var(--lv-sun-soft);color:var(--lv-sun)}
+.quick-actions button > span[data-tint="coral"]{background:var(--lv-no-soft);color:var(--lv-no)}
+.quick-actions button > span[data-tint="green"]{background:var(--lv-ok-soft);color:var(--lv-ok)}
+@media (prefers-reduced-motion:no-preference){
+  .quick-actions button:hover > span.lv-has-line{transform:rotate(-8deg) scale(1.08)}
+  .quick-actions button > span.lv-has-line{transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+}
+/* 單字卡：正面單字在四線格上（.lv-four 由 lively.js 加），背面只換字體 */
+.face.front .word.lv-four{min-width:62%}
+.face.back .word{font-family:"LvWord","LvNum",-apple-system,"Segoe UI",system-ui,sans-serif;font-weight:700}
+.face .speak.lv-has-line{font-size:22px}
+.face.front .speak.lv-has-line{background:var(--lv-soft);color:var(--lv-acc)}
+/* 測驗結果蓋章的宿主 */
+#quizBody .result{position:relative}
+
+@keyframes lvBreath{0%,100%{box-shadow:0 5px 0 var(--lv-btn-d),0 0 0 0 transparent}50%{box-shadow:0 5px 0 var(--lv-btn-d),0 0 0 7px color-mix(in srgb,var(--lv-btn) 22%,transparent)}}
+/* ---------- 作業簿版：考古單字盤點（904／907／908／919 才有；902 沒有這些元素，不受影響） ---------- */
+/* 首頁入口：淡色塊＋厚度，跟快捷鈕同一種按法 */
+.exam-entry{border-radius:18px;box-shadow:0 0 0 1.5px var(--lv-soft2),0 3px 0 var(--lv-soft2);transition:transform .08s,box-shadow .08s}
+.exam-entry:active{transform:translateY(2px);box-shadow:0 0 0 1.5px var(--lv-soft2),0 1px 0 var(--lv-soft2)}
+.exam-entry .lv-line-inline{color:var(--lv-acc)}
+/* 篩選膠囊：選中＝淡底＋強調色框（跟下方主行動按鈕分得開，也不會一整顆深色） */
+html body #view-exam .exam-filters .chip{min-height:44px;flex:0 0 auto;box-shadow:0 0 0 1.5px var(--lv-line),0 3px 0 var(--lv-line);border:none}
+html body #view-exam .exam-filters .chip.on{background:var(--lv-soft)!important;color:var(--lv-acc)!important;border:none!important;box-shadow:0 0 0 2px var(--lv-acc),0 3px 0 var(--lv-acc)!important}
+/* 勾選列與小按鈕：觸控 44px，小按鈕白底細框有厚度 */
+#view-exam .exam-toggles label{min-height:44px}
+html body #view-exam .exam-toggles .mini{min-height:44px;background:var(--lv-card);color:var(--lv-text);border:none;border-radius:13px;
+  box-shadow:0 0 0 1.5px var(--lv-line),0 3px 0 var(--lv-line);display:inline-flex;align-items:center;justify-content:center}
+#view-exam .exam-toggles .mini:active{transform:translateY(2px);box-shadow:0 0 0 1.5px var(--lv-line),0 1px 0 var(--lv-line)}
+#view-exam .exam-toggles .lv-line-inline{color:var(--lv-acc)}
+#eng80-how summary .lv-line-inline{color:var(--lv-acc);margin-left:0}
+#eng80-bar i{background:var(--lv-ok)}
+/* 字卡格：圓角＋底下一條厚度；左側級別色條保留（有意義）。字體不換：Andika 較寬，長字（championship）會被拆行 */
+#view-exam .exchip{border-radius:13px;box-shadow:0 2px 0 var(--lv-line)}
+#view-exam .exchip.known{box-shadow:none}
+/* 劃掉的字：用紅筆線劃掉 */
+#view-exam .exchip.known .ew{text-decoration-color:var(--lv-pen);text-decoration-thickness:2px}
+#view-exam .exchip .exx.on{background:var(--lv-ok-k);border-color:var(--lv-ok-k)}
+/* 級別分組標題：底線改紅筆；整級劃完時蓋的小章 */
+#view-exam .exgrp{position:relative;border-bottom-color:color-mix(in srgb,var(--lv-pen) 45%,var(--lv-line))}
+#view-exam .exgrp > .lv-stamp-result{width:66px;height:66px;right:10px;top:-20px}
+#view-exam .exgrp > .lv-stamp-result b{font-size:10px;letter-spacing:-.02em}
+#view-exam .exgrp > .lv-stamp-result span{font-size:10px;margin-top:1px}
+#view-exam .exgrp > .lv-stamp.lv-still{animation:none}
+/* 底部兩顆：主行動＝中淺色底＋深色字有厚度；另一顆＝白底細框（同 .btn／.btn.sec） */
+html body #view-exam .exam-build{border:none!important;border-radius:16px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;min-height:48px}
+html body #view-exam .exam-build:not(.alt){background:var(--lv-btn)!important;color:var(--lv-ink)!important;box-shadow:0 4px 0 var(--lv-btn-d)!important}
+html body #view-exam .exam-build.alt{background:var(--lv-card)!important;color:var(--lv-text)!important;box-shadow:0 0 0 1.5px var(--lv-line),0 4px 0 var(--lv-line)!important}
+#view-exam .exam-build:active{transform:translateY(3px)}
+#view-exam .exam-build .lv-line-inline{margin-left:0}
+#view-exam .exam-actions{background:color-mix(in srgb,var(--lv-paper) 94%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
